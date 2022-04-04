@@ -243,4 +243,27 @@ describe('SignUp Controller', () => {
 
     expect(addSpy).toHaveBeenCalledWith(accountData)
   })
+
+  test('should return 200 if valid data is provided', () => {
+    const { sut } = makeSut()
+
+    const httpRequest = {
+      body: {
+        name: 'validName',
+        email: 'valid.email@email.com',
+        password: 'validPassword',
+        passwordConfirmation: 'validPassword'
+      }
+    }
+
+    const httpResponse = sut.handle(httpRequest)
+
+    expect(httpResponse.statusCode).toBe(200)
+    expect(httpResponse.body).toStrictEqual({
+      id: 'validId',
+      name: 'validName',
+      email: 'valid.email@email.com',
+      password: 'validPassword'
+    })
+  })
 })
