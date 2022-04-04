@@ -1,11 +1,8 @@
+import { AccountModel } from '../../domain/models'
+import { AddAccount, AddAccountModel } from '../../domain/usecases'
 import { InvalidParamError, MissingParamError, ServerError } from '../errors'
 import { EmailValidator } from '../protocols'
 import { SignUpController } from './signup'
-
-interface SutTypes {
-  sut: SignUpController
-  emailValidatorStub: EmailValidator
-}
 
 const makeEmailValidator = (): EmailValidator => {
   class EmailValidatorStub implements EmailValidator {
@@ -16,13 +13,37 @@ const makeEmailValidator = (): EmailValidator => {
   return new EmailValidatorStub()
 }
 
+const makeAddAccount = (): AddAccount => {
+  class AddAccountStub implements AddAccount {
+    add (account: AddAccountModel): AccountModel {
+      const fakeAccount = {
+        id: 'validId',
+        name: 'validName',
+        email: 'valid.email@email.com',
+        password: 'validPassword'
+      }
+      return fakeAccount
+    }
+  }
+  return new AddAccountStub()
+}
+
+interface SutTypes {
+  sut: SignUpController
+  emailValidatorStub: EmailValidator
+  addAccountStub: AddAccount
+}
+
 const makeSut = (): SutTypes => {
   const emailValidatorStub = makeEmailValidator()
-  const sut = new SignUpController(emailValidatorStub)
+  const addAccountStub = makeAddAccount()
+
+  const sut = new SignUpController(emailValidatorStub, addAccountStub)
 
   return {
     sut,
-    emailValidatorStub
+    emailValidatorStub,
+    addAccountStub
   }
 }
 
@@ -179,5 +200,26 @@ describe('SignUp Controller', () => {
 
     expect(httpResponse.statusCode).toBe(500)
     expect(httpResponse.body).toStrictEqual(new ServerError())
+  })
+
+  test('should call AddAccount with correct values', () => {
+    const { sut, addAccountStub } = makeSut()
+
+    const addSpy = jest.spyOn(addAccountStub, 'add')
+
+    const httpRequest = {
+      body: {
+        name: 'anyName',
+        email: 'any.email@email.com',
+        password: 'anyPassword',
+        passwordConfirmation: 'anyPassword'
+      }
+    }
+
+    sut.handle(httpRequest)
+
+    const { passwordConfirmation, ...accountData } = httpRequest.body
+
+    expect(addSpy).toHaveBeenCalledWith(accountData)
   })
 })
