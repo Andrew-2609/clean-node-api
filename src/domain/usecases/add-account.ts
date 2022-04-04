@@ -2,7 +2,7 @@ import { AccountModel } from '../models'
 
 export interface AddAccountModel {
   name: string
-  emai: string
+  email: string
   password: string
 }
 
