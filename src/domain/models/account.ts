@@ -1,6 +1,6 @@
 export interface AccountModel {
   id: string
   name: string
-  emai: string
+  email: string
   password: string
 }
