@@ -16,7 +16,8 @@ const config: Config.InitialOptions = {
   testEnvironment: 'jest-environment-node',
   transform: {
     '.+\\.ts$': 'ts-jest'
-  }
+  },
+  preset: '@shelf/jest-mongodb'
 }
 
 export default config
