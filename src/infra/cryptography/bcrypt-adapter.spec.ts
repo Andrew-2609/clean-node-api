@@ -33,4 +33,19 @@ describe('BCrypt Adapter', () => {
 
     expect(hash).toBe('hash')
   })
+
+  test('should not handle thrown exception directly in BCryptAdapter if it throws', async () => {
+    const sut = makeSut()
+
+    jest.spyOn(
+      sut,
+      'encrypt'
+    ).mockImplementationOnce(async () => {
+      return await new Promise((resolve, reject) => reject(new Error()))
+    })
+
+    const hashPromise = sut.encrypt('anyValue')
+
+    await expect(hashPromise).rejects.toThrow()
+  })
 })
