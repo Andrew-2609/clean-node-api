@@ -9,7 +9,16 @@ interface SutTypes {
 const makeController = (): Controller => {
   class ControllerStub implements Controller {
     async handle (httpRequest: HttpRequest): Promise<HttpResponse> {
-      return await new Promise(resolve => resolve({ statusCode: 200, body: {} }))
+      const httpResponse: HttpResponse = {
+        statusCode: 200,
+        body: {
+          id: 'anyId',
+          name: 'anyName',
+          email: 'anyEmail@email.com',
+          password: 'anyPassword'
+        }
+      }
+      return await new Promise(resolve => resolve(httpResponse))
     }
   }
 
@@ -47,5 +56,30 @@ describe('LogController Decorator', () => {
     await sut.handle(httpRequest)
 
     expect(handleSpy).toHaveBeenCalledWith(httpRequest)
+  })
+
+  test('should return wrapped controller handle result', async () => {
+    const { sut } = makeSut()
+
+    const httpRequest = {
+      body: {
+        name: 'anyName',
+        email: 'anyEmail@email.com',
+        password: 'anyPassword',
+        passwordConfirmation: 'anyPassword'
+      }
+    }
+
+    const httpResponse = await sut.handle(httpRequest)
+
+    expect(httpResponse).toStrictEqual({
+      statusCode: 200,
+      body: {
+        id: 'anyId',
+        name: 'anyName',
+        email: 'anyEmail@email.com',
+        password: 'anyPassword'
+      }
+    })
   })
 })
