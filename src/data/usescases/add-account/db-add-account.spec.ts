@@ -1,6 +1,13 @@
 import { DbAddAccount } from './db-add-account'
 import { AccountModel, AddAccountModel, AddAccountRepository, Encrypter } from './db-add-account-protocols'
 
+const makeFakeAccount = (): AccountModel => ({
+  id: 'validId',
+  name: 'validName',
+  email: 'validEmail',
+  password: 'hashedPassword'
+})
+
 const makeEncrypter = (): Encrypter => {
   class EncrypterStub implements Encrypter {
     async encrypt (value: string): Promise<string> {
@@ -14,18 +21,18 @@ const makeEncrypter = (): Encrypter => {
 const makeAddAccountRepository = (): AddAccountRepository => {
   class AddAccountRepositoryStub implements AddAccountRepository {
     async add (accountData: AddAccountModel): Promise<AccountModel> {
-      const fakeAccount = {
-        id: 'validId',
-        name: 'validName',
-        email: 'validEmail',
-        password: 'hashedPassword'
-      }
-      return await new Promise(resolve => resolve(fakeAccount))
+      return await new Promise(resolve => resolve(makeFakeAccount()))
     }
   }
 
   return new AddAccountRepositoryStub()
 }
+
+const makeFakeAccountData = (): AddAccountModel => ({
+  name: 'validName',
+  email: 'validEmail',
+  password: 'validPassword'
+})
 
 interface SutTypes {
   sut: DbAddAccount
@@ -54,15 +61,9 @@ describe('DbAddAccount Usecase', () => {
       'encrypt'
     )
 
-    const accountData = {
-      name: 'validName',
-      email: 'validEmail',
-      password: 'validPassword'
-    }
+    await sut.add(makeFakeAccountData())
 
-    await sut.add(accountData)
-
-    expect(encryptSpy).toHaveBeenCalledWith(accountData.password)
+    expect(encryptSpy).toHaveBeenCalledWith(makeFakeAccountData().password)
   })
 
   test('should not handle thrown exception directly in Encrypter if it throws', async () => {
@@ -75,13 +76,7 @@ describe('DbAddAccount Usecase', () => {
       return await new Promise((resolve, reject) => reject(new Error()))
     })
 
-    const accountData = {
-      name: 'validName',
-      email: 'validEmail',
-      password: 'validPassword'
-    }
-
-    const accountPromise = sut.add(accountData)
+    const accountPromise = sut.add(makeFakeAccountData())
 
     await expect(accountPromise).rejects.toThrow()
   })
@@ -94,15 +89,9 @@ describe('DbAddAccount Usecase', () => {
       'add'
     )
 
-    const accountData = {
-      name: 'validName',
-      email: 'validEmail',
-      password: 'validPassword'
-    }
+    await sut.add(makeFakeAccountData())
 
-    await sut.add(accountData)
-
-    expect(addSpy).toHaveBeenCalledWith(Object.assign({}, accountData, { password: 'hashedPassword' }))
+    expect(addSpy).toHaveBeenCalledWith(Object.assign({}, makeFakeAccountData(), { password: 'hashedPassword' }))
   })
 
   test('should not handle thrown exception directly in AddAccountRepository if it throws', async () => {
@@ -115,13 +104,7 @@ describe('DbAddAccount Usecase', () => {
       return await new Promise((resolve, reject) => reject(new Error()))
     })
 
-    const accountData = {
-      name: 'validName',
-      email: 'validEmail',
-      password: 'validPassword'
-    }
-
-    const accountPromise = sut.add(accountData)
+    const accountPromise = sut.add(makeFakeAccountData())
 
     await expect(accountPromise).rejects.toThrow()
   })
@@ -129,16 +112,8 @@ describe('DbAddAccount Usecase', () => {
   test('should return an account on success', async () => {
     const { sut } = makeSut()
 
-    const accountData = {
-      name: 'validName',
-      email: 'validEmail',
-      password: 'validPassword'
-    }
+    const account = await sut.add(makeFakeAccountData())
 
-    const account = await sut.add(accountData)
-
-    expect(account).toStrictEqual(Object.assign(
-      { id: 'validId' }, accountData, { password: 'hashedPassword' }
-    ))
+    expect(account).toStrictEqual(makeFakeAccount())
   })
 })
